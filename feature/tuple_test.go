@@ -31,6 +31,7 @@ func TestNewPoint(t *testing.T) {
 			},
 		},
 	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got := feature.NewPoint(test.x, test.y, test.z)
@@ -69,6 +70,7 @@ func TestNewVector(t *testing.T) {
 			},
 		},
 	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got := feature.NewVector(test.x, test.y, test.z)
@@ -79,6 +81,39 @@ func TestNewVector(t *testing.T) {
 			if got.IsPoint() {
 				t.Error("expected IsPoint() = false, but got IsPoint() = true")
 			}
+			if diff := pretty.Diff(got, test.want); len(diff) != 0 {
+				t.Errorf("\n%s", strings.Join(diff, "\n"))
+			}
+		})
+	}
+}
+
+func TestNewColor(t *testing.T) {
+	tests := []struct {
+		name string
+		r    float64
+		g    float64
+		b    float64
+		want feature.Tuple
+	}{
+		{
+			name: "is a color",
+			r:    -0.5,
+			g:    0.4,
+			b:    1.7,
+			want: feature.Tuple{
+				X: -0.5,
+				Y: 0.4,
+				Z: 1.7,
+				W: 0.0,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := feature.NewColor(test.r, test.g, test.b)
+
 			if diff := pretty.Diff(got, test.want); len(diff) != 0 {
 				t.Errorf("\n%s", strings.Join(diff, "\n"))
 			}
@@ -156,6 +191,7 @@ func TestAdd(t *testing.T) {
 			err:  feature.ErrAddTwoPoints,
 		},
 	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got, err := test.first.Add(test.second)
@@ -262,6 +298,7 @@ func TestSub(t *testing.T) {
 			err:  feature.ErrSubPointFromVector,
 		},
 	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got, err := test.first.Sub(test.second)
@@ -298,6 +335,7 @@ func TestNeg(t *testing.T) {
 			},
 		},
 	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got := test.tuple.Neg()
@@ -349,6 +387,7 @@ func TestMul(t *testing.T) {
 			},
 		},
 	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got := test.tuple.Mul(test.scalar)
@@ -415,6 +454,7 @@ func TestDiv(t *testing.T) {
 			err:    feature.ErrDivByZero,
 		},
 	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got, err := test.tuple.Div(test.scalar)
@@ -503,6 +543,7 @@ func TestMagnitude(t *testing.T) {
 			err:  feature.ErrNotVector,
 		},
 	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got, err := test.tuple.Magnitude()
@@ -568,6 +609,7 @@ func TestNormalize(t *testing.T) {
 			err:  feature.ErrNotVector,
 		},
 	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got, err := test.tuple.Normalize()
@@ -676,6 +718,7 @@ func TestDotProduct(t *testing.T) {
 			err:  feature.ErrNotVector,
 		},
 	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got, err := test.first.DotProduct(test.second)
@@ -718,7 +761,7 @@ func TestCrossProduct(t *testing.T) {
 				Z: -1.0,
 				W: 0.0,
 			},
-			err:  nil,
+			err: nil,
 		},
 		{
 			name: "case 2",
@@ -740,7 +783,7 @@ func TestCrossProduct(t *testing.T) {
 				Z: 1.0,
 				W: 0.0,
 			},
-			err:  nil,
+			err: nil,
 		},
 		{
 			name: "invalid 1",
@@ -777,6 +820,7 @@ func TestCrossProduct(t *testing.T) {
 			err:  feature.ErrNotVector,
 		},
 	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got, err := test.first.CrossProduct(test.second)
@@ -784,6 +828,44 @@ func TestCrossProduct(t *testing.T) {
 			if !errors.Is(err, test.err) {
 				t.Errorf("%q: got error %v, expected error %v", test.name, err, test.err)
 			}
+			if !test.want.IsEqual(got) {
+				t.Errorf("%s wants %+v and got %+v", test.name, test.want, got)
+			}
+		})
+	}
+}
+
+func TestHadamardProduct(t *testing.T) {
+	tests := []struct {
+		name   string
+		first  feature.Tuple
+		second feature.Tuple
+		want   feature.Tuple
+	}{
+		{
+			name: "case 1",
+			first: feature.Tuple{
+				X: 1.0,
+				Y: 0.2,
+				Z: 0.4,
+			},
+			second: feature.Tuple{
+				X: 0.9,
+				Y: 1.0,
+				Z: 0.1,
+			},
+			want: feature.Tuple{
+				X: 0.9,
+				Y: 0.2,
+				Z: 0.04,
+			},
+		},
+	}
+	
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := test.first.HadamardProduct(test.second)
+
 			if !test.want.IsEqual(got) {
 				t.Errorf("%s wants %+v and got %+v", test.name, test.want, got)
 			}

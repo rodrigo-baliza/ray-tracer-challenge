@@ -11,6 +11,12 @@ var (
 	ErrSubPointFromVector = errors.New("can't sub point from vector")
 	ErrDivByZero          = errors.New("can't div by zero")
 	ErrNotVector          = errors.New("it's not a vector")
+
+	ColorBlack = NewColor(0, 0, 0)
+	ColorWhite = NewColor(1, 1, 1)
+	ColorRed   = NewColor(1, 0, 0)
+	ColorGreen = NewColor(0, 1, 0)
+	ColorBlue  = NewColor(0, 0, 1)
 )
 
 // Tuple is the primitive type for any ray tracing operations.
@@ -24,15 +30,20 @@ type Tuple struct {
 
 // NewPoint creates a new point tuple.
 func NewPoint(x, y, z float64) Tuple {
-	return new(x, y, z, 1.0)
+	return newTuple(x, y, z, 1.0)
 }
 
 // NewVector creates a new vector tuple.
 func NewVector(x, y, z float64) Tuple {
-	return new(x, y, z, 0.0)
+	return newTuple(x, y, z, 0.0)
 }
 
-func new(x, y, z, w float64) Tuple {
+// NewColor creates a new color tuple.
+func NewColor(r, g, b float64) Tuple {
+	return newTuple(r, g, b, 0.0)
+}
+
+func newTuple(x, y, z, w float64) Tuple {
 	return Tuple{
 		X: x,
 		Y: y,
@@ -41,6 +52,7 @@ func new(x, y, z, w float64) Tuple {
 	}
 }
 
+// String is the string representation of the Tuple.
 func (t Tuple) String() string {
 	return fmt.Sprintf("proj new position: x[%f] y[%f] z[%f]", t.X, t.Y, t.Z)
 }
@@ -158,6 +170,16 @@ func (t Tuple) CrossProduct(o Tuple) (Tuple, error) {
 	return c, nil
 }
 
+// HadamardProduct is the multiplication of a color by other color and returns a color.
+func (t Tuple) HadamardProduct(o Tuple) Tuple {
+	return newTuple(
+		t.X*o.X,
+		t.Y*o.Y,
+		t.Z*o.Z,
+		0.0,
+	)
+}
+
 // Magnitude is the distance represented by a vector.
 func (t Tuple) Magnitude() (float64, error) {
 	var m float64
@@ -190,4 +212,10 @@ func (t Tuple) Normalize() (Tuple, error) {
 	n.W = t.W / mag
 
 	return n, nil
+}
+
+func isEqual(a, b float64) bool {
+	const EPSILON = 0.00001
+
+	return math.Abs(a-b) < EPSILON
 }
