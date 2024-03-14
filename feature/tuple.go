@@ -2,6 +2,7 @@ package feature
 
 import (
 	"errors"
+	"fmt"
 	"math"
 )
 
@@ -38,6 +39,10 @@ func new(x, y, z, w float64) Tuple {
 		Z: z,
 		W: w,
 	}
+}
+
+func (t Tuple) String() string {
+	return fmt.Sprintf("proj new position: x[%f] y[%f] z[%f]", t.X, t.Y, t.Z)
 }
 
 // IsPoint returns if the Tuple is a point.
