@@ -54,7 +54,16 @@ func newTuple(x, y, z, w float64) Tuple {
 
 // String is the string representation of the Tuple.
 func (t Tuple) String() string {
-	return fmt.Sprintf("proj new position: x[%f] y[%f] z[%f]", t.X, t.Y, t.Z)
+	return fmt.Sprintf("proj new position: x[%f] y[%f] z[%f] w [%f]", t.X, t.Y, t.Z, t.W)
+}
+
+// ColorString is the string representation of the Color.
+func (t Tuple) ColorString(max int) (string, string, string) {
+	x := clamp(t.X, max)
+	y := clamp(t.Y, max)
+	z := clamp(t.Z, max)
+
+	return fmt.Sprintf("%d", x), fmt.Sprintf("%d", y), fmt.Sprintf("%d", z)
 }
 
 // IsPoint returns if the Tuple is a point.
@@ -218,4 +227,17 @@ func isEqual(a, b float64) bool {
 	const EPSILON = 0.00001
 
 	return math.Abs(a-b) < EPSILON
+}
+
+func clamp(value float64, max int) int {
+	c := value * float64(max)
+	c = math.Round(c)
+
+	if c > 255 {
+		c = 255
+	} else if c < 0 {
+		c = 0
+	}
+
+	return int(c)
 }

@@ -141,3 +141,87 @@ func TestWritePixel(t *testing.T) {
 		})
 	}
 }
+
+var (
+	ppm1 = `P3
+1 1
+255
+0 0 0
+`
+
+	ppm2 = `P3
+2 2
+255
+0 0 0 0 0 0 0 0 0 0 0 0
+`
+
+	ppm3 = `P3
+2 2
+255
+255 128 0 255 128 0 255 128 0 255 128 0
+`
+
+	ppm4 = `P3
+10 2
+255
+255 204 153 255 204 153 255 204 153 255 204 153 255 204 153 255 204
+153 255 204 153 255 204 153 255 204 153 255 204 153 255 204 153 255
+204 153 255 204 153 255 204 153 255 204 153 255 204 153 255 204 153
+255 204 153 255 204 153 255 204 153
+`
+)
+
+func TestToPPM(t *testing.T) {
+	tests := []struct {
+		name   string
+		width  int
+		height int
+		color  feature.Tuple
+		want   string
+	}{
+		{
+			name:   "valid 1",
+			width:  1,
+			height: 1,
+			color:  feature.ColorBlack,
+			want:   ppm1,
+		},
+		{
+			name:   "valid 2",
+			width:  2,
+			height: 2,
+			color:  feature.ColorBlack,
+			want:   ppm2,
+		},
+		{
+			name:   "valid 3",
+			width:  2,
+			height: 2,
+			color:  feature.NewColor(1.5, 0.5, -1.5),
+			want:   ppm3,
+		},
+		{
+			name:   "valid 4",
+			width:  10,
+			height: 2,
+			color:  feature.NewColor(1, 0.8, 0.6),
+			want:   ppm4,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			canvas, err := feature.NewCanvas(test.width, test.height)
+			if err != nil {
+				t.Fatalf("error creating a new canvas: %v", err)
+			}
+
+			canvas.Fill(test.color)
+			got := canvas.ToPPM(feature.IdentifierP3, feature.MaxColor)
+
+			if got != test.want {
+				t.Errorf("%q: got PPM %q, expected %q", test.name, got, test.want)
+			}
+		})
+	}
+}

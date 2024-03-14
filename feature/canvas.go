@@ -1,6 +1,15 @@
 package feature
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
+
+const (
+	IdentifierP3 = "P3"
+	MaxColor     = 255
+)
 
 var (
 	ErrInvalidCanvasSize  = errors.New("invalid canvas size")
@@ -23,7 +32,7 @@ func NewCanvas(width, height int) (*Canvas, error) {
 	}
 
 	pixels := make([]Tuple, width*height)
-	for i := range width*height{
+	for i := range width * height {
 		pixels[i] = ColorBlack
 	}
 
@@ -39,6 +48,13 @@ func NewCanvas(width, height int) (*Canvas, error) {
 // Size returns the Canvas size.
 func (c *Canvas) Size() int {
 	return c.width * c.height
+}
+
+// Size returns the Canvas size.
+func (c *Canvas) Fill(color Tuple) {
+	for i := range c.pixels {
+		c.pixels[i] = color
+	}
 }
 
 // Pixel returns the pixel color in the position x and y.
@@ -66,6 +82,59 @@ func (c *Canvas) WritePixel(x, y int, color Tuple) error {
 	c.pixels[pos] = color
 
 	return nil
+}
+
+// ToPPM returns an PPM version of the canvas
+func (c *Canvas) ToPPM(identifier string, maxColor int) string {
+	const maxSpace = 70
+
+	ppm := strings.Builder{}
+
+	// Header
+	ppm.WriteString(fmt.Sprintf("%s\n", identifier))
+	ppm.WriteString(fmt.Sprintf("%d %d\n", c.width, c.height))
+	ppm.WriteString(fmt.Sprintf("%d\n", maxColor))
+
+	// Data
+	line := ""
+	for _, pixel := range c.pixels {
+		r, g, b := pixel.ColorString(maxColor)
+
+		if line == "" {
+			line = r
+		} else if len(line)+len(r)+1 > maxSpace {
+			ppm.WriteString(fmt.Sprintf("%s\n", line))
+			line = r
+		} else {
+			line = fmt.Sprintf("%s %s", line, r)
+		}
+
+		if line == "" {
+			line = g
+		} else if len(line)+len(g)+1 > maxSpace {
+			ppm.WriteString(fmt.Sprintf("%s\n", line))
+			line = g
+		} else {
+			line = fmt.Sprintf("%s %s", line, g)
+		}
+
+		if line == "" {
+			line = b
+		} else if len(line)+len(b)+1 > maxSpace {
+			ppm.WriteString(fmt.Sprintf("%s\n", line))
+			line = b
+		} else {
+			line = fmt.Sprintf("%s %s", line, b)
+		}
+	}
+	if line != "" {
+		ppm.WriteString(line)
+	}
+
+	// Ending new line
+	ppm.WriteString("\n")
+
+	return ppm.String()
 }
 
 func (c *Canvas) xy2pos(x, y int) (int, error) {
